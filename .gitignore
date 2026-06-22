@@ -1,0 +1,16 @@
+node_modules/
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
+
+# Local env overrides — never commit secrets
+cypress.env.json
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/

@@ -1,0 +1,24 @@
+{
+  "name": "partner-e2e",
+  "version": "1.0.0",
+  "description": "E2E automation suite for Partner management workflow",
+  "scripts": {
+    "cy:open": "cypress open",
+    "cy:run": "cypress run",
+    "cy:run:headed": "cypress run --headed",
+    "cy:run:partners": "cypress run --spec 'cypress/e2e/partners/**/*.cy.ts'",
+    "cy:run:smoke": "cypress run --env tags=smoke",
+    "lint": "eslint 'cypress/**/*.ts'",
+    "lint:fix": "eslint 'cypress/**/*.ts' --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "cypress": "^13.13.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint-plugin-cypress": "^3.0.0"
+  }
+}

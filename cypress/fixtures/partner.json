@@ -1,0 +1,16 @@
+{
+  "newPartner": {
+    "name": "AutomationPartnerQA",
+    "type": "Service",
+    "address": "Sofia, Bulgaria",
+    "phone": "123456789",
+    "contactName": "QAContactPerson",
+    "description": "QA Automation test partner"
+  },
+  "updatedPartner": {
+    "name": "AutomationPartnerQA-Updated",
+    "phone": "987654321",
+    "contactName": "QAContactUpdated",
+    "description": "QA Automation test partner - updated"
+  }
+}
