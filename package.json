@@ -8,8 +8,8 @@
     "cy:run:headed": "cypress run --headed",
     "cy:run:partners": "cypress run --spec 'cypress/e2e/partners/**/*.cy.ts'",
     "cy:run:smoke": "cypress run --env tags=smoke",
-    "lint": "eslint 'cypress/**/*.ts'",
-    "lint:fix": "eslint 'cypress/**/*.ts' --fix",
+    "lint": "eslint cypress/**/*.ts",
+    "lint:fix": "eslint cypress/**/*.ts --fix",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

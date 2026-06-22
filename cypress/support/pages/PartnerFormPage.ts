@@ -1,6 +1,6 @@
 export interface PartnerFormData {
   name?: string;
-  type?: string;         // e.g. "Service", "Insurer"
+  type?: string;
   address?: string;
   phone?: string;
   contactName?: string;
@@ -9,62 +9,43 @@ export interface PartnerFormData {
 
 export class PartnerFormPage {
   fillName(value: string): this {
-    cy.get('input[placeholder="Write partner name"]')
-      .click()
-      .selectAll()
-      .type(value);
+    cy.get('input[placeholder="Write partner name"]').clear();
+    cy.get('input[placeholder="Write partner name"]').type(value);
     return this;
   }
 
-  /**
-   * Selects a type in the Ant Design multi-select.
-   * Clicks the dropdown, then clicks the matching option by text.
-   */
   selectType(value: string): this {
     cy.get('.ant-select.ant-select-borderless.ant-select-multiple > .ant-select-selector').click();
     cy.contains('.ant-select-item-option', value).click();
-    // Click outside to close the dropdown
     cy.contains('div', /^Edit partner$/).click();
     return this;
   }
 
   fillAddress(value: string): this {
-    cy.get('input[placeholder="Enter a location"]')
-      .click()
-      .selectAll()
-      .type(value);
-    // Pick the first autocomplete suggestion that contains "Bulgaria"
+    cy.get('input[placeholder="Enter a location"]').clear();
+    cy.get('input[placeholder="Enter a location"]').type(value);
     cy.contains('Bulgaria').eq(3).click();
     return this;
   }
 
   fillPhone(value: string): this {
-    cy.get('#phone-field')
-      .click()
-      .selectAll()
-      .type(value);
+    cy.get('#phone-field').clear();
+    cy.get('#phone-field').type(value);
     return this;
   }
 
   fillContactName(value: string): this {
-    cy.get('input[placeholder="Names of contact person"]')
-      .click()
-      .selectAll()
-      .type(value);
+    cy.get('input[placeholder="Names of contact person"]').clear();
+    cy.get('input[placeholder="Names of contact person"]').type(value);
     return this;
   }
 
   fillDescription(value: string): this {
-    cy.get('textarea[placeholder="Write description"]')
-      .click()
-      .selectAll()
-      .type(value);
+    cy.get('textarea[placeholder="Write description"]').clear();
+    cy.get('textarea[placeholder="Write description"]').type(value);
     return this;
   }
 
-  /**
-   * Fills whichever fields are provided — safe for both create and partial update.
-   */
   fill(data: PartnerFormData): this {
     if (data.name !== undefined)        this.fillName(data.name);
     if (data.type !== undefined)        this.selectType(data.type);
@@ -75,10 +56,6 @@ export class PartnerFormPage {
     return this;
   }
 
-  /**
-   * The recording shows two Save buttons; the modal-level Save is index 1.
-   * After clicking, wait for the modal to close.
-   */
   save(): this {
     cy.contains('button', 'Save').eq(1).click();
     return this;

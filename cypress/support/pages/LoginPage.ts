@@ -3,9 +3,11 @@ export class LoginPage {
   private readonly passwordInput = 'input[type="password"]';
 
   login(email: string, password: string): this {
-    cy.visit('/login');  // must be inside login() so session setup navigates
-    cy.get(this.emailInput).first().clear().type(email);
-    cy.get(this.passwordInput).clear().type(password, { log: false });
+    cy.visit('/login');
+    cy.get(this.emailInput).first().clear();
+    cy.get(this.emailInput).first().type(email);
+    cy.get(this.passwordInput).clear();
+    cy.get(this.passwordInput).type(password, { log: false });
     cy.contains('button', 'Sign in').click();
     cy.url().should('not.include', '/login');
     return this;
