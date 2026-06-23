@@ -1,17 +1,10 @@
-/**
- * Create Partner workflow.
- *
- * NOTE: We don't yet have a Playwright recording of the Create flow, so the
- * form interactions here mirror the Edit recording (same form component).
- * Update selectors here if the Create form differs once you record it.
- */
-import { PartnersListPage, PartnerFormPage, PartnerDetailPage } from '../../support/pages';
+import { PartnersListPage, PartnerFormPage } from '../../support/pages';
 import type { PartnerFormData } from '../../support/pages';
+import { getPartnerApi, getStoredAuthToken } from '../../support/api/partnerApi';
 
 describe('Create Partner', () => {
   const listPage = new PartnersListPage();
   const formPage = new PartnerFormPage();
-  const detailPage = new PartnerDetailPage();
   let partner: PartnerFormData;
 
   before(() => {
@@ -27,18 +20,41 @@ describe('Create Partner', () => {
     cy.url().should('include', 'partner');
   });
 
-  it('creates a new partner and validates the detail card', () => {
-    // TODO: record the Create flow with Playwright codegen and confirm
-    // the "New / Add" button selector, then replace the cy.visit below.
-    // For now we navigate directly if a /partners/new route exists.
-    cy.contains('button', /new|add|create/i).first().click();
+  it('creates a new partner and validates it was persisted', { tags: '@smoke' }, () => {
+    const partnerName = `${partner.name}-${Date.now()}`;
+    cy.intercept('POST', '**/admin/partner').as('createPartner');
 
-    formPage.fill(partner);
+    cy.contains('button', 'New partner').click();
+
+    formPage.fill({ ...partner, name: partnerName });
+    formPage.uploadLogo('cypress/fixtures/images/partner-logo.png');
     formPage.save();
 
-    detailPage.shouldDisplayName(partner.name!);
-    detailPage.shouldDisplayContactName(partner.contactName!);
-    detailPage.shouldDisplayAddress(partner.address!);
-    detailPage.shouldDisplayDescription(partner.description!);
+    // The app has no standalone detail page, so persistence is validated
+    // two ways: the list row (what the UI itself shows the user) and a
+    // direct API fetch (covers fields like type/description that aren't
+    // rendered as list columns at all).
+    cy.wait('@createPartner').then(({ response }) => {
+      expect(response?.statusCode).to.eq(200);
+      const uuid = response?.body.uuid as string;
+
+      return getStoredAuthToken().then((token) => getPartnerApi(token, uuid)).then((persisted) => {
+        expect(persisted.name).to.eq(partnerName);
+        expect(persisted.type).to.eq('carService');
+        expect(persisted.address).to.eq(partner.address);
+        // The phone field auto-prepends a country code, so we only assert
+        // the digits we typed are present rather than an exact match.
+        expect(persisted.phone).to.include(partner.phone);
+        expect(persisted.contactPerson).to.eq(partner.contactName);
+        expect(persisted.description).to.eq(partner.description);
+      });
+    });
+
+    listPage.shouldShowPartnerRow(partnerName, {
+      address: partner.address,
+      phone: partner.phone,
+      contactName: partner.contactName,
+      services: partner.services,
+    });
   });
 });

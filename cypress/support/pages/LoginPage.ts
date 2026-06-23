@@ -1,15 +1,20 @@
 export class LoginPage {
-  private readonly emailInput = 'input[type="text"], input[type="email"]';
+  private readonly emailInput = 'input[autocomplete="email"], input[type="email"]';
   private readonly passwordInput = 'input[type="password"]';
 
   login(email: string, password: string): this {
-    cy.visit('/login');
+    // Force English so text-based selectors are deterministic regardless of
+    // the app's locale default (observed to be Bulgarian on a fresh profile).
+    cy.visit('/login', {
+      onBeforeLoad(win) {
+        win.localStorage.setItem('locale', JSON.stringify({ locale: 'en' }));
+      },
+    });
     cy.get(this.emailInput).first().clear();
     cy.get(this.emailInput).first().type(email);
     cy.get(this.passwordInput).clear();
     cy.get(this.passwordInput).type(password, { log: false });
-    cy.contains('button', 'Sign in').click();
-    cy.url().should('not.include', '/login');
+    cy.get('button[type="submit"]').click();
     return this;
   }
 

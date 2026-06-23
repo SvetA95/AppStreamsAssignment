@@ -3,7 +3,7 @@ import { LoginPage } from '../../support/pages';
 describe('Authentication', () => {
   const loginPage = new LoginPage();
 
-  it('logs in with valid credentials', () => {
+  it('logs in with valid credentials', { tags: '@smoke' }, () => {
     loginPage.login(
       Cypress.env('EMAIL') as string,
       Cypress.env('PASSWORD') as string,

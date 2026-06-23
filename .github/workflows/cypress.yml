@@ -1,0 +1,57 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+
+  e2e:
+    needs: lint-and-typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Run smoke suite on every push/PR
+        if: github.event_name != 'workflow_dispatch'
+        run: npm run cy:run:smoke
+        env:
+          CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
+          CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+          CYPRESS_API_URL: ${{ secrets.CYPRESS_API_URL }}
+
+      - name: Run full suite on manual trigger
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run cy:run
+        env:
+          CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
+          CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+          CYPRESS_API_URL: ${{ secrets.CYPRESS_API_URL }}
+
+      - name: Upload videos and screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-artifacts
+          path: |
+            cypress/videos
+            cypress/screenshots
+          retention-days: 7

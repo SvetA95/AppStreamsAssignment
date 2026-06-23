@@ -7,7 +7,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["cypress", "node"],
+    "types": ["cypress", "node", "@cypress/grep"],
     "ignoreDeprecations": "5.0"
   },
   "include": ["cypress/**/*.ts", "cypress.config.ts"],

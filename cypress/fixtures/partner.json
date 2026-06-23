@@ -2,6 +2,8 @@
   "newPartner": {
     "name": "AutomationPartnerQA",
     "type": "Service",
+    "services": ["Car wash"],
+    "subscriptionTier": "Free",
     "address": "Sofia, Bulgaria",
     "phone": "123456789",
     "contactName": "QAContactPerson",
@@ -12,5 +14,16 @@
     "phone": "987654321",
     "contactName": "QAContactUpdated",
     "description": "QA Automation test partner - updated"
+  },
+  "apiSeed": {
+    "namePrefix": "ApiSeededPartner",
+    "type": "carService",
+    "subscriptionTier": "a6dcfc95-0cf7-432b-a1a9-e703bb181255",
+    "serviceTypes": [379],
+    "address": "Sofia, Bulgaria",
+    "location": "42.6977082,23.3218675",
+    "phone": "+359123456789",
+    "contactPerson": "ApiSeedContact",
+    "description": "Seeded via API for test setup"
   }
 }

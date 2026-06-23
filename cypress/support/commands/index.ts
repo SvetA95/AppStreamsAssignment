@@ -18,7 +18,7 @@ Cypress.Commands.add('login', (
     new LoginPage().login(email, password);
   }, {
     validate() {
-      cy.getCookies().should('have.length.greaterThan', 0);
+      cy.window().its('localStorage').invoke('getItem', 'auth').should('exist');
     },
   });
   cy.visit('/');
