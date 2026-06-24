@@ -37,7 +37,6 @@ jobs:
       - name: Run Cypress tests
         uses: cypress-io/github-action@v6
         with:
-          # No start command — tests run against the live dev environment
           wait-on: "https://dev.admin.avtoikonom.com"
           wait-on-timeout: 60
           browser: chrome

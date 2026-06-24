@@ -13,7 +13,7 @@ export class PartnerFormPage {
   /**
    * AntD Select fields render a virtualized option list, so for fields with
    * many options (services, subscription tier) we type into the search box
-   * to filter down to the match instead of hunting the virtualized DOM.
+   * to filter down to the match.
    */
   private selectAntOption(fieldId: string, value: string): void {
     cy.get(`#${fieldId}`).closest('.ant-select-selector').click();

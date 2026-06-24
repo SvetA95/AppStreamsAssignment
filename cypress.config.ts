@@ -28,8 +28,6 @@ export default defineConfig({
       config.env.EMAIL    = process.env.CYPRESS_EMAIL    || config.env.EMAIL;
       config.env.PASSWORD = process.env.CYPRESS_PASSWORD || config.env.PASSWORD;
       config.env.API_URL  = process.env.CYPRESS_API_URL  || config.env.API_URL;
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require('@cypress/grep/src/plugin')(config);
       return config;
     },
   },

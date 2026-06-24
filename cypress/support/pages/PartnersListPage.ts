@@ -34,7 +34,21 @@ export class PartnersListPage {
 
   clickEditForPartner(name: string): this {
     this.openActionsForPartner(name);
-    cy.contains('Edit').click();
+    // #edit-button (not text "Edit") avoids a race with the dropdown's
+    // open animation that intermittently swallowed the click.
+    cy.get('#edit-button').click();
+    return this;
+  }
+
+  /**
+   * Opens the partner detail page. Clicking the row's *name* cell does
+   * nothing — navigation only triggers from the other cells (address,
+   * phone, contact person), which is what this clicks.
+   */
+  openPartnerDetails(name: string): this {
+    this.searchForPartner(name);
+    cy.contains('td', name).closest('tr').find('td.testid-carColumn').click();
+    cy.url().should('include', '/partners/details/');
     return this;
   }
 

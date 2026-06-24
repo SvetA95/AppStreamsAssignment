@@ -5,8 +5,8 @@ End-to-end test suite for the Partner management workflow on `https://dev.admin.
 ## What's covered
 
 - **Login** (`cypress/e2e/auth/login.cy.ts`) — valid and invalid credentials.
-- **Create Partner** (`cypress/e2e/partners/create-partner.cy.ts`) — navigates to Partners, fills out the full form (name, type, services, subscription tier, address autocomplete, phone, contact, description, logo upload), saves, and validates persistence.
-- **Update Partner** (`cypress/e2e/partners/update-partner.cy.ts`) — opens an existing partner via the row action menu, edits it, validates the changes persisted, and verifies Cancel discards changes.
+- **Create Partner** (`cypress/e2e/partners/create-partner.cy.ts`) — navigates to Partners, fills out the full form (name, type, services, subscription tier, address autocomplete, phone, contact, description, logo upload), saves, and validates persistence via the list row, the partner's own detail page, and the API. Also captures a screenshot of the detail page.
+- **Update Partner** (`cypress/e2e/partners/update-partner.cy.ts`) — opens an existing partner via the row action menu, edits it, validates the changes persisted, verifies Cancel discards changes, and verifies the edit form can also be opened from the partner detail page (a second navigation path to the same form).
 - **Partner API** (`cypress/e2e/api/partner-api.cy.ts`) — pure API-contract tests (create/update/persist via `cy.request`, plus an invalid-login negative case), independent of the UI.
 
 ## Install and run
@@ -16,7 +16,6 @@ npm install
 npm run cy:open          # interactive runner
 npm run cy:run           # full suite, headless
 npm run cy:run:headed    # full suite, headed
-npm run cy:run:smoke     # only @smoke-tagged tests (fast critical-path subset)
 npm run cy:run:partners  # only the partners specs
 npm run lint
 npm run typecheck
@@ -49,10 +48,11 @@ cypress/
       LoginPage.ts                  # login form
       PartnersListPage.ts           # search, row actions, row-level assertions
       PartnerFormPage.ts            # create/edit form (shared by both flows)
+      PartnerDetailPage.ts          # partner detail page assertions + edit-form entry point
     api/partnerApi.ts               # cy.request wrappers: login/create/update/get
     commands/index.ts               # cy.login() (session-cached)
-    index.ts                        # global hooks, locale, @cypress/grep registration
-.github/workflows/cypress.yml       # CI: lint + typecheck, then smoke/full suite
+    index.ts                        # global hooks, locale
+.github/workflows/e2e.yml           # CI: lint + typecheck, then the full suite
 ```
 
 ## Architecture
@@ -64,14 +64,16 @@ cypress/
   2. **Persistence verification**: both UI specs intercept the create/update network call (`cy.intercept`) and follow up with a direct `GET` to assert the full persisted payload — including fields like `type`/`description` that the UI never renders back anywhere (see below).
 - **Session caching** — `cy.session()` (via the `cy.login()` custom command) caches the authenticated session across tests in a run, with a `validate()` check against the `auth` key in `localStorage` (this app stores its JWT there, not in cookies).
 - **Locale forced to English** — a fresh browser profile defaults this app to Bulgarian; we seed `localStorage.locale` before each visit so text-based assertions are deterministic regardless of the runner's default locale.
-- **Tagged smoke subset** — `@cypress/grep` tags the three most critical happy-path tests as `@smoke` (login, create, update), runnable independently via `npm run cy:run:smoke` for fast feedback in CI before the full suite.
-- **CI** — `.github/workflows/cypress.yml` runs lint + typecheck, then the smoke suite on every push/PR, with the full suite available via manual dispatch. Videos/screenshots upload as artifacts on failure.
+- **Dropdown menu items clicked by `id`, not text** — `cy.contains('Edit').click()` intermittently raced the row/card action menu's open animation and missed (passed dozens of times, then failed). Both the row menu and the detail page's menu render the same underlying component with a stable `#edit-button`/`#delete-button`, so clicking by `id` removed the race entirely.
+- **CI** — `.github/workflows/e2e.yml` runs lint + typecheck, then the full suite on every push/PR (via `cypress-io/github-action`) and on manual dispatch. Videos/screenshots upload as artifacts on failure.
 
-### Why there's no "detail page" object
+### Partner detail page navigation is non-obvious
 
-Partners don't have a standalone detail view to validate against in this app — clicking a list row does nothing, and visiting `/partners/{uuid}` directly just renders the list. All partner data is shown either in the list table's columns or inside the edit drawer. Validation is built around what actually exists:
-- **List row assertions** (`PartnersListPage.shouldShowPartnerRow`) for what the UI itself displays to a user (name, address, phone, contact, services).
-- **API `GET` assertions** for fields not rendered as list columns at all (`type`, `description`).
+Partners do have a standalone detail page (`/partners/details/{id}`, with `#partner-details-card` and friends — `PartnerDetailPage.ts`), but **clicking a row's name cell does nothing**. Navigation only fires from the *other* cells in the row (address, phone, contact person) — `PartnersListPage.openPartnerDetails()` clicks the address cell specifically. This was easy to miss since the name is the obvious thing to click; it was found by testing each cell rather than assuming standard list-row behavior.
+
+Validation for Create combines three independent layers: the **list row** (what a user scanning the table sees), the **detail page** (name, type, phone, contact, address, description, services — plus a screenshot), and the **API `GET`** (catches anything neither UI view happens to render, like a backend field that's silently dropped).
+
+The detail page's own action menu also opens the same Edit drawer used everywhere else, giving partners a second route into editing — covered by a dedicated "opens the edit form from the partner details page" test in the Update spec (navigation only, not a duplicate of the full update-and-verify flow already covered elsewhere).
 
 ## Assumptions made
 
@@ -83,7 +85,7 @@ Partners don't have a standalone detail view to validate against in this app —
 
 ## Known limitations
 
-- **No test-data cleanup.** A `DELETE /admin/partner/{uuid}` endpoint exists but is gated behind MFA verification (confirmed directly: returns `403 {"code":1003,"info":"mfa temp code is invalid"}`), which isn't obtainable through the API. Every test run leaves a handful of clearly-named (`AutomationPartnerQA-*`, `ApiSeededPartner-*`) records behind on the shared dev environment — there's no way to delete them via automation. A real project would either use a dedicated, regularly-reset test environment, or a service-account/CI-only bypass for the MFA gate.
+- **No test-data cleanup.** A `DELETE /admin/partner/{uuid}` endpoint exists but is gated behind MFA verification (confirmed directly: returns `403 {"code":1003,"info":"mfa temp code is invalid"}`), which isn't obtainable through the API. Every test run leaves a handful of clearly-named (`AutomationPartnerQA-*`, `ApiSeededPartner-*`) records behind on the shared dev environment — there's no way to delete them via automation. The partner detail page's own action menu also exposes a "Delete" option (the list row's menu only shows "Edit"), but it's untested whether that UI path bypasses the same MFA check or just surfaces the identical prompt — worth a manual check before assuming either way. A real project would either use a dedicated, regularly-reset test environment, or a service-account/CI-only bypass for the MFA gate.
 - **Dev environment is shared and has no reset.** Tests generate unique names (timestamp-suffixed) specifically to avoid collisions with this accumulated data, rather than relying on cleanup.
 
 ## What I'd improve with more time
@@ -91,5 +93,5 @@ Partners don't have a standalone detail view to validate against in this app —
 - Get a service-account or MFA-bypass path for `DELETE`, and add real `afterEach` cleanup.
 - Move the subscription-tier/service-type test data out of a fixture referencing specific existing records, into a small test-data-setup script run once per environment.
 - Add visual/accessibility checks (axe) on the create/edit form, since it's complex enough to be a good candidate.
-- Parallelize CI across spec files once the suite grows past what's comfortable in a single job.
+- Parallelize CI across spec files once the suite grows past what's comfortable in a single job, and introduce tagging (e.g. `@cypress/grep`) for a fast-feedback smoke subset at that point — not worth the added complexity at the current 10-test scale.
 - Component/contract tests for the API layer against a mocked backend, to catch breaking API changes without needing the real dev environment at all.

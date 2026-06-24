@@ -1,4 +1,4 @@
-import { PartnersListPage, PartnerFormPage } from '../../support/pages';
+import { PartnersListPage, PartnerFormPage, PartnerDetailPage } from '../../support/pages';
 import type { PartnerFormData } from '../../support/pages';
 import { createPartnerApi, getPartnerApi, getStoredAuthToken, type ApiPartnerPayload } from '../../support/api/partnerApi';
 
@@ -9,6 +9,7 @@ interface ApiSeedFixture extends Omit<ApiPartnerPayload, 'name'> {
 describe('Update Partner', () => {
   const listPage = new PartnersListPage();
   const formPage = new PartnerFormPage();
+  const detailPage = new PartnerDetailPage();
   let updated: PartnerFormData;
   let apiSeed: ApiSeedFixture;
   let seedPartnerName: string;
@@ -22,8 +23,8 @@ describe('Update Partner', () => {
   });
 
   // Seed a fresh, uniquely-named partner via API before every test so the
-  // update flow never depends on pre-existing/shared data in the dev
-  // environment (which has no delete endpoint to clean up after itself).
+  // update flow never depends on pre-existing/shared data in the dev environment. 
+  // This ensures the test is self-contained and repeatable.
   beforeEach(() => {
     cy.login();
 
@@ -35,16 +36,12 @@ describe('Update Partner', () => {
     listPage.navigateViaMenu();
   });
 
-  it('opens the edit form via the row action menu', () => {
-    listPage.clickEditForPartner(seedPartnerName);
-    cy.contains('Edit partner').should('be.visible');
-  });
-
-  it('updates partner fields and validates changes are persisted', { tags: '@smoke' }, () => {
+  it('updates partner fields and validates changes are persisted', () => {
     const updatedName = `${updated.name}-${Date.now()}`;
     cy.intercept('PUT', '**/admin/partner/*').as('updatePartner');
 
     listPage.clickEditForPartner(seedPartnerName);
+    cy.contains('Edit partner').should('be.visible');
 
     formPage
       .fillName(updatedName)
@@ -57,11 +54,6 @@ describe('Update Partner', () => {
 
     formPage.save();
 
-    // The app has no standalone detail page, so persistence is validated two
-    // ways: the list row (what the UI itself shows the user) and a direct
-    // API fetch (covers fields like type/description that aren't rendered
-    // as list columns). The exact wire value for "Insurer" isn't known, so
-    // we assert the GET reflects whatever the UI actually submitted.
     cy.wait('@updatePartner').then(({ request, response }) => {
       expect(response?.statusCode).to.eq(200);
       const submittedType = request.body.type as string;
@@ -81,6 +73,17 @@ describe('Update Partner', () => {
       phone: updated.phone,
       contactName: updated.contactName,
     });
+  });
+
+  it('opens the edit form from the partner details page', () => {
+    listPage.openPartnerDetails(seedPartnerName);
+    detailPage.openEditForm();
+    cy.contains('Edit partner').should('be.visible');
+    cy.get('#name-field').should('have.value', seedPartnerName);
+
+    // Just verifying the navigation path works, not re-testing the save
+    // flow itself (already covered above) — discard rather than persist.
+    formPage.cancel();
   });
 
   it('cancel discards changes and returns to the list', () => {

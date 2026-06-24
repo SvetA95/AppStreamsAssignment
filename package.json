@@ -7,13 +7,11 @@
     "cy:run": "cypress run",
     "cy:run:headed": "cypress run --headed",
     "cy:run:partners": "cypress run --spec 'cypress/e2e/partners/**/*.cy.ts'",
-    "cy:run:smoke": "cypress run --env grepTags=@smoke",
     "lint": "eslint cypress/**/*.ts",
     "lint:fix": "eslint cypress/**/*.ts --fix",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@cypress/grep": "^4.1.1",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
