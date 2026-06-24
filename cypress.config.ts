@@ -22,9 +22,12 @@ export default defineConfig({
     screenshotOnRunFailure: true,
 
     setupNodeEvents(on, config) {
-      config.env.EMAIL    = process.env.CYPRESS_EMAIL    ?? config.env.EMAIL;
-      config.env.PASSWORD = process.env.CYPRESS_PASSWORD ?? config.env.PASSWORD;
-      config.env.API_URL  = process.env.CYPRESS_API_URL  ?? config.env.API_URL;
+      // `||` (not `??`): CI sets these env vars to "" rather than leaving
+      // them unset when a secret isn't configured, and "" must still fall
+      // back to the default — nullish coalescing wouldn't catch that.
+      config.env.EMAIL    = process.env.CYPRESS_EMAIL    || config.env.EMAIL;
+      config.env.PASSWORD = process.env.CYPRESS_PASSWORD || config.env.PASSWORD;
+      config.env.API_URL  = process.env.CYPRESS_API_URL  || config.env.API_URL;
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       require('@cypress/grep/src/plugin')(config);
       return config;
