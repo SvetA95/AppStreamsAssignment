@@ -4,9 +4,12 @@
   "description": "E2E automation suite for Partner management workflow",
   "scripts": {
     "cy:open": "cypress open",
-    "cy:run": "cypress run",
+    "clean": "node -e \"['cypress/reports','cypress/screenshots','cypress/videos'].forEach(p=>require('fs').rmSync(p,{recursive:true,force:true}))\"",
+    "cy:run:ui": "cypress run --spec 'cypress/e2e/**/*.cy.ts'",
+    "cy:run:api": "cypress run --spec 'cypress/api/**/*.cy.ts' --config video=false",
+    "cy:run": "npm run clean && npm run cy:run:ui && npm run cy:run:api",
     "cy:run:headed": "cypress run --headed",
-    "cy:run:partners": "cypress run --spec 'cypress/e2e/partners/**/*.cy.ts'",
+    "cy:run:partners": "npm run clean && cypress run --spec 'cypress/e2e/partners/**/*.cy.ts'",
     "lint": "eslint cypress/**/*.ts cypress.config.ts",
     "lint:fix": "eslint cypress/**/*.ts cypress.config.ts --fix",
     "typecheck": "tsc --noEmit"

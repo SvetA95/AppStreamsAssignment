@@ -1,4 +1,4 @@
-import { loginApi, createPartnerApi, updatePartnerApi, getPartnerApi, type ApiPartnerPayload } from '../../support/api/partnerApi';
+import { loginApi, createPartnerApi, updatePartnerApi, getPartnerApi, type ApiPartnerPayload } from '../support/api/partnerApi';
 
 interface ApiSeedFixture extends Omit<ApiPartnerPayload, 'name'> {
   namePrefix: string;

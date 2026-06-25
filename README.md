@@ -1,27 +1,33 @@
 # Partner E2E Automation
 
-[![E2E Tests](https://github.com/SvetA95/AppStreamsAssignment/actions/workflows/e2e.yml/badge.svg)](https://github.com/SvetA95/AppStreamsAssignment/actions/workflows/e2e.yml)
+[![Cypress Tests](https://github.com/SvetA95/AppStreamsAssignment/actions/workflows/tests.yml/badge.svg)](https://github.com/SvetA95/AppStreamsAssignment/actions/workflows/tests.yml)
 
 End-to-end test suite for the Partner management workflow on `https://dev.admin.avtoikonom.com`, built with [Cypress](https://www.cypress.io/) + TypeScript.
+
+**[Latest test report](https://SvetA95.github.io/AppStreamsAssignment/)** — published by CI on every run, no artifact download needed.
 
 ## What's covered
 
 - **Login** (`cypress/e2e/auth/login.cy.ts`) — valid and invalid credentials.
 - **Create Partner** (`cypress/e2e/partners/create-partner.cy.ts`) — navigates to Partners, fills out the full form (name, type, services, subscription tier, address autocomplete, phone, contact, description, logo upload), saves, and validates persistence via the list row, the partner's detail page, and the API. Also captures a screenshot of the detail page.
 - **Update Partner** (`cypress/e2e/partners/update-partner.cy.ts`) — opens an existing partner via the row action menu, edits it, validates the changes persisted, verifies Cancel discards changes, and verifies the edit form is also reachable from the partner detail page.
-- **Partner API** (`cypress/e2e/api/partner-api.cy.ts`) — API-contract tests (create/update/persist via `cy.request`, plus an invalid-login negative case), independent of the UI.
+- **Partner API** (`cypress/api/partner-api.cy.ts`) — API-contract tests (create/update/persist via `cy.request`, plus an invalid-login negative case), independent of the UI.
 
 ## Install and run
 
 ```bash
 npm install
 npm run cy:open          # interactive runner
-npm run cy:run           # full suite, headless
+npm run cy:run           # full suite, headless (UI specs, then API specs)
+npm run cy:run:ui        # only cypress/e2e (browser journeys)
+npm run cy:run:api       # only cypress/api (cy.request contract tests, no video)
 npm run cy:run:headed    # full suite, headed
 npm run cy:run:partners  # only the partners specs
 npm run lint
 npm run typecheck
 ```
+
+`npm run cy:run` is two separate Cypress invocations, not one — see [Architecture](#architecture) for why — but both land in a single merged report at `cypress/reports/index.html`.
 
 ### Configuration
 
@@ -37,11 +43,12 @@ or via a local, git-ignored `cypress.env.json` (copy `cypress.env.json.example`)
 
 ```
 cypress/
-  e2e/
+  e2e/                               # browser journeys
     auth/login.cy.ts                # login happy/sad path
     partners/create-partner.cy.ts   # create flow
     partners/update-partner.cy.ts   # edit flow
-    api/partner-api.cy.ts           # API-only contract tests
+  api/                               # pure cy.request contract tests, no browser action
+    partner-api.cy.ts
   fixtures/
     partner.json                    # UI test data + API seed data
     images/partner-logo.png         # sample upload used by both UI flows
@@ -54,7 +61,7 @@ cypress/
     api/partnerApi.ts               # cy.request wrappers: login/create/update/get
     commands/index.ts               # cy.login() (session-cached)
     index.ts                        # global hooks, locale
-.github/workflows/e2e.yml           # CI: lint + typecheck, then the full suite
+.github/workflows/tests.yml         # CI: lint + typecheck, then UI + API specs, then publish the report
 ```
 
 ## Architecture
@@ -66,8 +73,11 @@ cypress/
   2. **Persistence verification** — both UI specs intercept the create/update network call (`cy.intercept`) and follow up with a direct `GET` to assert the full persisted payload, including fields like `type`/`description` that the UI doesn't surface on the list view.
 - **Session caching.** `cy.session()` (via the `cy.login()` custom command) caches the authenticated session across tests in a run. Its `validate()` checks the `auth` key in `localStorage`, since this app persists its JWT there rather than in cookies.
 - **Locale pinned to English.** The app defaults to Bulgarian on a fresh browser profile, so `localStorage.locale` is seeded before each visit, keeping text-based assertions deterministic regardless of the runner's locale.
-- **CI.** `.github/workflows/e2e.yml` runs lint + typecheck, then the full suite on every push/PR (via `cypress-io/github-action`) and on manual dispatch, with `concurrency` cancelling a superseded run if a branch is pushed to again mid-run. Videos, screenshots, and the HTML test report all upload as artifacts.
-- **Reporting.** `cypress-mochawesome-reporter` produces a self-contained HTML report (`cypress/reports/index.html`) after every run — pass/fail per test, durations, and failure screenshots inline — so a failure can be triaged without scrubbing through a video.
+- **UI and API specs run as two Cypress invocations.** `video` is a whole-run setting in Cypress, not per-spec, so recording the API spec (pure `cy.request`, no browser action worth watching back) would mean either video for everything or nothing. `npm run cy:run` / CI instead run `cypress/e2e` and `cypress/api` separately, disabling video only for the latter. Both invocations still land in one combined report — `cypressParallel` and `removeJsonsFolderAfterMerge: false` in `cypress.config.ts`'s `reporterOptions` stop the reporter from wiping the first invocation's results before merging in the second.
+- **CI.** `.github/workflows/tests.yml` runs lint + typecheck, then the UI and API specs, on every push/PR and on manual dispatch, with `concurrency` cancelling a superseded run if a branch is pushed to again mid-run. Videos, screenshots, and the HTML report all upload as downloadable artifacts, and the report is also published to GitHub Pages so it's viewable as a live page without downloading anything (link in the job summary and at the top of this README).
+- **Reporting.** `cypress-mochawesome-reporter` produces a self-contained HTML report (`cypress/reports/index.html`) — pass/fail per test, durations, and failure screenshots inline — so a failure can be triaged without scrubbing through a video.
+
+> Publishing to Pages requires a one-time repo setting: **Settings → Pages → Build and deployment → Source: GitHub Actions.** Without it the `deploy-report` job fails on its first run.
 
 ### Partner detail page
 
