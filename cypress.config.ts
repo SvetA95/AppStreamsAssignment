@@ -1,6 +1,17 @@
 import { defineConfig } from 'cypress';
 
 export default defineConfig({
+  reporter: 'cypress-mochawesome-reporter',
+  reporterOptions: {
+    reportDir: 'cypress/reports',
+    overwrite: false,
+    html: true,
+    json: true,
+    charts: true,
+    embeddedScreenshots: true,
+    inlineAssets: true,
+  },
+
   e2e: {
     baseUrl: 'https://dev.admin.avtoikonom.com',
     specPattern: 'cypress/e2e/**/*.cy.ts',
@@ -22,6 +33,9 @@ export default defineConfig({
     screenshotOnRunFailure: true,
 
     setupNodeEvents(on, config) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- no typed subpath export to import
+      require('cypress-mochawesome-reporter/plugin')(on);
+
       // `||` (not `??`): CI sets these env vars to "" rather than leaving
       // them unset when a secret isn't configured, and "" must still fall
       // back to the default — nullish coalescing wouldn't catch that.

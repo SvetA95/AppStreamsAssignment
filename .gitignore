@@ -2,6 +2,7 @@ node_modules/
 cypress/videos/
 cypress/screenshots/
 cypress/downloads/
+cypress/reports/
 
 # Local env overrides — never commit secrets
 cypress.env.json

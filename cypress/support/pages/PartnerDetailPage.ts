@@ -34,7 +34,6 @@ export class PartnerDetailPage {
     return this;
   }
 
-  /** Opens the same create/edit drawer used elsewhere, from the detail page's own action menu. */
   openEditForm(): this {
     cy.get('#partner-details-card').find('img[alt="dots-icon"]').click();
     cy.get('#edit-button').click();

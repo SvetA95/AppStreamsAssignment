@@ -10,15 +10,9 @@ export interface PartnerFormData {
 }
 
 export class PartnerFormPage {
-  /**
-   * AntD Select fields render a virtualized option list, so for fields with
-   * many options (services, subscription tier) we type into the search box
-   * to filter down to the match.
-   */
-  private selectAntOption(fieldId: string, value: string): void {
+
+  private selectOption(fieldId: string, value: string): void {
     cy.get(`#${fieldId}`).closest('.ant-select-selector').click();
-    // The dropdown's own option panel can transiently overlap the search
-    // input while it positions itself, so the visibility check is forced.
     cy.get(`#${fieldId}`).type(value, { force: true });
     cy.contains('.ant-select-item-option', value).click();
   }
@@ -30,20 +24,18 @@ export class PartnerFormPage {
   }
 
   selectType(value: string): this {
-    this.selectAntOption('partner-type-field', value);
+    this.selectOption('partner-type-field', value);
     return this;
   }
 
   selectServiceTypes(values: string[]): this {
-    values.forEach((value) => this.selectAntOption('service-types-field', value));
-    // Multi-select keeps its dropdown open after each pick; close it so it
-    // doesn't overlap and block whatever field is interacted with next.
+    values.forEach((value) => this.selectOption('service-types-field', value));
     cy.get('#name-field').click();
     return this;
   }
 
   selectSubscriptionTier(value: string): this {
-    this.selectAntOption('subscription-tier-field', value);
+    this.selectOption('subscription-tier-field', value);
     return this;
   }
 
@@ -78,8 +70,6 @@ export class PartnerFormPage {
 
   uploadLogo(filePath: string): this {
     cy.get('input[name="file-upload"]').selectFile(filePath, { force: true });
-    // Selecting a file opens an "Edit photo" cropper modal that must be
-    // confirmed before the underlying form's own Save button is reachable.
     cy.contains('.ant-modal-content', 'Edit photo').within(() => {
       cy.contains('button', 'Save').click();
     });

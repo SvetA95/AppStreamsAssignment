@@ -54,13 +54,12 @@ describe('Update Partner', () => {
 
     formPage.save();
 
-    cy.wait('@updatePartner').then(({ request, response }) => {
+    cy.wait('@updatePartner').then(({ response }) => {
       expect(response?.statusCode).to.eq(200);
-      const submittedType = request.body.type as string;
 
       return getStoredAuthToken().then((token) => getPartnerApi(token, seedPartnerUuid)).then((persisted) => {
         expect(persisted.name).to.eq(updatedName);
-        expect(persisted.type).to.eq(submittedType);
+        expect(persisted.type).to.eq('insurer');
         // The phone field auto-prepends a country code, so we only assert
         // the digits we typed are present rather than an exact match.
         expect(persisted.phone).to.include(updated.phone);
@@ -80,9 +79,7 @@ describe('Update Partner', () => {
     detailPage.openEditForm();
     cy.contains('Edit partner').should('be.visible');
     cy.get('#name-field').should('have.value', seedPartnerName);
-
-    // Just verifying the navigation path works, not re-testing the save
-    // flow itself (already covered above) — discard rather than persist.
+    
     formPage.cancel();
   });
 

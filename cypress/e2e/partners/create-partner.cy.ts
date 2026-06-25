@@ -35,8 +35,6 @@ describe('Create Partner', () => {
         expect(persisted.name).to.eq(partnerName);
         expect(persisted.type).to.eq('carService');
         expect(persisted.address).to.eq(partner.address);
-        // The phone field auto-prepends a country code, so we only assert
-        // the digits we typed are present rather than an exact match.
         expect(persisted.phone).to.include(partner.phone);
         expect(persisted.contactPerson).to.eq(partner.contactName);
         expect(persisted.description).to.eq(partner.description);
@@ -50,8 +48,6 @@ describe('Create Partner', () => {
       services: partner.services,
     });
 
-    // Also validate the dedicated detail page (reached by clicking a row's
-    // address/phone/contact cell — clicking the name itself does nothing).
     listPage.openPartnerDetails(partnerName);
     detailPage
       .shouldDisplayName(partnerName)

@@ -8,6 +8,12 @@ on:
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
 
+# Cancel a still-running run for the same branch/PR when a new commit lands,
+# instead of letting superseded runs pile up.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   cypress:
     name: Cypress E2E
@@ -60,4 +66,12 @@ jobs:
         with:
           name: cypress-videos
           path: cypress/videos
+          retention-days: 7
+
+      - name: Upload mochawesome report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-report
+          path: cypress/reports
           retention-days: 7

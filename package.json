@@ -7,8 +7,8 @@
     "cy:run": "cypress run",
     "cy:run:headed": "cypress run --headed",
     "cy:run:partners": "cypress run --spec 'cypress/e2e/partners/**/*.cy.ts'",
-    "lint": "eslint cypress/**/*.ts",
-    "lint:fix": "eslint cypress/**/*.ts --fix",
+    "lint": "eslint cypress/**/*.ts cypress.config.ts",
+    "lint:fix": "eslint cypress/**/*.ts cypress.config.ts --fix",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
@@ -16,8 +16,10 @@
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "cypress": "^13.13.0",
+    "cypress-mochawesome-reporter": "^4.0.2",
     "eslint": "^8.57.0",
     "eslint-plugin-cypress": "^3.0.0",
+    "mochawesome": "^7.1.4",
     "typescript": "^5.4.0"
   }
 }
