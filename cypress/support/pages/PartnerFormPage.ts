@@ -40,10 +40,6 @@ export class PartnerFormPage {
   }
 
   fillAddress(value: string): this {
-    // The form requires an address picked from the Google Places suggestion
-    // dropdown (free text alone fails validation with "Please choose an
-    // address!"). The exact suggestion text doesn't matter, just that one
-    // is selected, so we always take the first match for the typed value.
     cy.get('#address-field').clear();
     cy.get('#address-field').type(value);
     cy.get('.pac-item').first().click({ force: true });

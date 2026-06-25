@@ -5,11 +5,8 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
-  # Allow manual trigger from GitHub UI
   workflow_dispatch:
 
-# Cancel a still-running run for the same branch/PR when a new commit lands,
-# instead of letting superseded runs pile up.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -45,10 +42,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # Two invocations because Cypress's `video` setting applies to a whole
-      # run, not per spec — the API spec is pure cy.request with no browser
-      # action worth recording. Both still land in one merged HTML report
-      # (see reporterOptions in cypress.config.ts).
       - name: Run UI tests (Cypress)
         uses: cypress-io/github-action@v6
         with:
@@ -57,6 +50,7 @@ jobs:
           wait-on-timeout: 60
           browser: chrome
           record: false
+          summary-title: "UI Tests Results"
         env:
           CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
@@ -70,6 +64,7 @@ jobs:
           browser: chrome
           record: false
           install: false
+          summary-title: "API Tests Results"
         env:
           CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
@@ -99,8 +94,6 @@ jobs:
           path: cypress/reports
           retention-days: 7
 
-      # Also hand the report to the Pages deploy job, so it's viewable as a
-      # live page instead of only as a downloadable artifact.
       - name: Upload report for Pages
         if: always()
         uses: actions/upload-pages-artifact@v3
@@ -112,9 +105,6 @@ jobs:
     needs: test
     if: always()
     runs-on: ubuntu-latest
-    # Removed environment block because the environment name value was invalid
-    # and caused workflow validation errors. The deployment step still
-    # publishes pages and exposes the page URL via step outputs.
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
